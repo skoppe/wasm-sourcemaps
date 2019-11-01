@@ -17,5 +17,6 @@ auto encodeVlq(long n) {
 
 unittest {
   import std.stdio;
-  writeln(5.encodeVlq);
+  assert(5.encodeVlq == "K");
+  assert(125.encodeVlq == "6H");
 }

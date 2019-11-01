@@ -56,7 +56,7 @@ auto toSourceMap(DebugLines)(DebugLines lines, uint codeSectionOffset) {
       }
     }
   }
-  // auto names= JSONValue().array;
+
   JSONValue[] names;
   return JSONValue(["version": JSONValue(3),
                     "names": JSONValue(names),
