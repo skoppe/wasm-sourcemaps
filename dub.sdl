@@ -1,0 +1,6 @@
+name "wasm-sourcemap"
+description "Converts DWARF debug info to sourcemaps for browser debug tools"
+authors "Sebastiaan Koppe"
+copyright "Copyright © 2019, Sebastiaan Koppe"
+license "MIT"
+dependency "wasm-reader" version="~>0.0.6"
