@@ -10,15 +10,8 @@ module dwarf.debugline;
 import std.exception;
 import std.range;
 import std.conv : to;
-
 import dwarf.meta;
-
-class ELFException : Exception {
-	this(string msg, string file = __FILE__, size_t line = __LINE__) {
-		super(msg, file, line);
-	}
-}
-
+import dwarf.elf;
 import std.stdio;
 import std.format;
 
@@ -50,13 +43,11 @@ align(1) struct LineProgramHeader64L {
 }
 
 struct DebugLine {
-	private LineProgram[] m_lps;
+	private Appender!(LineProgram[]) m_lps;
 
 	private enum uint DWARF_64BIT_FLAG = 0xffff_ffff;
 
 	this(ubyte[] lineProgramContents) {
-		this.m_lps = new LineProgram[0];
-
 		while (!lineProgramContents.empty) {
 			LineProgram lp;
 
@@ -110,7 +101,7 @@ struct DebugLine {
 			auto program = lineProgramContents[startOffset + lp.m_header.headerLength() .. endOffset + lp.m_header.unitLength()];
 
 			buildMachine(lp, program);
-			m_lps ~= lp;
+			m_lps.put(lp);
 
 			lineProgramContents = lineProgramContents[endOffset + lp.m_header.unitLength() .. $];
 		}
@@ -122,9 +113,6 @@ struct DebugLine {
 
 		Machine m;
 		m.isStatement = lp.m_header.defaultIsStatement();
-
-		lp.m_addresses = new AddressInfo[0];
-
 		while (!program.empty) {
 			ubyte opcode = program.read!ubyte();
 
@@ -156,7 +144,7 @@ struct DebugLine {
 								auto dirIndex = program.readULEB128(); // unused
 								auto fileMod = program.readULEB128(); // unused
 								auto fileSize = program.readULEB128(); // unused
-								// trace("defineFile");
+								trace("defineFile ", dirIndex);
 								break;
 
 							default:
@@ -249,13 +237,13 @@ struct DebugLine {
 				m.line += linc;
 
 				// trace("special ", ainc, " ", linc);
-        lp.m_addresses ~= m.toAddressInfo();
+        lp.m_addresses.put(m.toAddressInfo());
 			}
 		}
 	}
 
 	const(LineProgram)[] programs() const {
-		return m_lps;
+		return m_lps.data;
 	}
 }
 
@@ -408,12 +396,16 @@ struct LineProgram {
 		FileInfo[] m_files;
 		string[] m_dirs;
 
-		AddressInfo[] m_addresses;
+		Appender!(AddressInfo[]) m_addresses;
 	}
 
 	const(AddressInfo)[] addressInfo() const {
-		return m_addresses;
+		return m_addresses.data;
 	}
+
+  size_t dirIndex(ulong fileIndex) const {
+    return m_files[fileIndex - 1].dirIndex;
+  }
 
 	string fileFromIndex(ulong fileIndex) const {
 		import std.path : buildPath;
