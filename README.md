@@ -12,7 +12,7 @@ Then you can run this tools with `dub run wasm-sourcemaps -- --help`.
 
 ## Usage
 
-Make sure your WebAssembly files contains dwarf debug information.
+Make sure your WebAssembly file contains dwarf debug information.
 
 ```
 Usage: wasm-sourcemaps [--help] [--output=<string>] [--embed=<bool>]
