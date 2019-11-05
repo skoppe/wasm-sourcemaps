@@ -58,7 +58,7 @@ auto getSourceMappingUrl(ref Options options) {
   return "./"~output;
 }
 
-immutable usage = usageString!Options("example");
+immutable usage = usageString!Options("wasm-sourcemaps");
 immutable help = helpString!Options;
 
 enum sourceMappingUrlName = "sourceMappingURL";
