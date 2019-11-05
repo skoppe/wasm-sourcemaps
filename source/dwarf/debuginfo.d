@@ -13,33 +13,31 @@ import std.format;
 import std.algorithm;
 
 struct DebugInfo {
-	private Appender!(CompilationUnit[]) units_;
+  private Appender!(CompilationUnit[]) units_;
 
-	private enum uint DWARF_64BIT_FLAG = 0xffff_ffff;
+  private enum uint DWARF_64BIT_FLAG = 0xffff_ffff;
 
-	this(ubyte[] contents, const(Tag[ULEB128]) tags, ubyte[] strs) {
-		while (!contents.empty) {
-			CompilationUnit unit;
+  this(ubyte[] contents, const(Tag[ULEB128]) tags, ubyte[] strs) {
+    while (!contents.empty) {
+      CompilationUnit unit;
 
       ubyte[] nextUnit;
-			// detect dwarf 32bit or 64bit
-			uint initialLength = * cast(uint*) contents.ptr;
-      bool is64bit = (*cast(uint*) contents.ptr) == DWARF_64BIT_FLAG;
-      if (is64bit) {
+      // detect dwarf 32bit or 64bit
+      uint initialLength = * cast(uint*) contents.ptr;
+      unit.is64bit = (*cast(uint*) contents.ptr) == DWARF_64BIT_FLAG;
+      if (unit.is64bit) {
         contents.popFrontExactly(uint.sizeof); // skip 64bit marker
         unit.unitLength = contents.read!(ulong);
         nextUnit = contents[unit.unitLength .. $];
         unit.dwarfVersion = contents.read!(ushort);
         unit.debugAbbrevOffset = contents.read!(ulong);
         unit.addressSize = contents.read!(ubyte);
-        unit.is64bit = is64bit;
       } else {
         unit.unitLength = contents.read!(uint);
         nextUnit = contents[unit.unitLength .. $];
         unit.dwarfVersion = contents.read!(ushort);
         unit.debugAbbrevOffset = contents.read!(uint);
         unit.addressSize = contents.read!(ubyte);
-        unit.is64bit = is64bit;
       }
 
       auto tagCode = contents.readULEB128;
@@ -55,7 +53,7 @@ struct DebugInfo {
       units_.put(unit);
       contents = nextUnit;
     }
-	}
+  }
 
   const(CompilationUnit)[] units() { return units_.data; }
 }
@@ -109,7 +107,7 @@ auto readRawAttribute(ref ubyte[] contents, const ref AttributeForm form, ref Co
     case exprLoc: auto len = contents.readULEB128; return contents.readBytes(len);
     case flagPresent: return contents[0 .. 0];
     case refSig8: return contents.readRawULEB128();
-  }
+    }
 }
 
 struct RawAttribute {
@@ -119,10 +117,10 @@ struct RawAttribute {
 }
 
 struct CompilationUnit {
-	ulong unitLength;
-	ushort dwarfVersion;
-	ulong debugAbbrevOffset;
-	ubyte addressSize;
+  ulong unitLength;
+  ushort dwarfVersion;
+  ulong debugAbbrevOffset;
+  ubyte addressSize;
   bool is64bit;
   RawAttribute[] attributes;
   ubyte[] strs;
@@ -141,49 +139,49 @@ auto getCompDir(const ref CompilationUnit unit) {
 }
 
 private T read(T)(ref ubyte[] buffer) {
-	T result = *(cast(T*) buffer[0 .. T.sizeof].ptr);
-	buffer.popFrontExactly(T.sizeof);
-	return result;
+  T result = *(cast(T*) buffer[0 .. T.sizeof].ptr);
+  buffer.popFrontExactly(T.sizeof);
+  return result;
 }
 
 private ulong readULEB128(ref ubyte[] buffer) {
-	import std.array;
-	ulong val = 0;
-	ubyte b;
-	uint shift = 0;
+  import std.array;
+  ulong val = 0;
+  ubyte b;
+  uint shift = 0;
 
-	while (true) {
-		b = buffer.read!ubyte();
+  while (true) {
+    b = buffer.read!ubyte();
 
-		val |= (b & 0x7f) << shift;
-		if ((b & 0x80) == 0) break;
-		shift += 7;
-	}
+    val |= (b & 0x7f) << shift;
+    if ((b & 0x80) == 0) break;
+    shift += 7;
+  }
 
-	return val;
+  return val;
 }
 
 unittest {
-	ubyte[] data = [0xe5, 0x8e, 0x26, 0xDE, 0xAD, 0xBE, 0xEF];
-	assert(readULEB128(data) == 624_485);
-	assert(data[] == [0xDE, 0xAD, 0xBE, 0xEF]);
+  ubyte[] data = [0xe5, 0x8e, 0x26, 0xDE, 0xAD, 0xBE, 0xEF];
+  assert(readULEB128(data) == 624_485);
+  assert(data[] == [0xDE, 0xAD, 0xBE, 0xEF]);
 }
 
 private long readSLEB128(ref ubyte[] buffer) {
-	import std.array;
-	long val = 0;
-	uint shift = 0;
-	ubyte b;
-	int size = 8 << 3;
+  import std.array;
+  long val = 0;
+  uint shift = 0;
+  ubyte b;
+  int size = 8 << 3;
 
-	while (true) {
-		b = buffer.read!ubyte();
-		val |= (b & 0x7f) << shift;
-		shift += 7;
-		if ((b & 0x80) == 0)
-			break;
-	}
+  while (true) {
+    b = buffer.read!ubyte();
+    val |= (b & 0x7f) << shift;
+    shift += 7;
+    if ((b & 0x80) == 0)
+      break;
+  }
 
-	if (shift < size && (b & 0x40) != 0) val |= -(1 << shift);
-	return val;
+  if (shift < size && (b & 0x40) != 0) val |= -(1 << shift);
+  return val;
 }

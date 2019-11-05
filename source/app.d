@@ -82,7 +82,7 @@ int main(string[] args)
   }
 
   if (!exists(options.input)) {
-    writefln("Error: File %s doesn't exist", args[1]);
+    writefln("Error: File %s doesn't exist", options.input);
     return 1;
   }
 
