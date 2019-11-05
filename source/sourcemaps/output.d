@@ -4,7 +4,7 @@ import sourcemaps.vlq;
 import std.array;
 import std.json;
 import std.path : buildNormalizedPath;
-import std.algorithm : find;
+import std.algorithm : find, canFind;
 import std.file : exists, readText;
 import std.stdio : writeln, stderr;
 import std.format;
