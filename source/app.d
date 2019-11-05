@@ -1,5 +1,6 @@
 import std.stdio;
 import wasm_reader.reader;
+import wasm_reader.leb;
 import dwarf.debugline;
 import dwarf.debugabbrev;
 import dwarf.debuginfo;
@@ -30,7 +31,7 @@ struct Options
   string output;
 
   @Option("embed")
-  @Help("embed sourcemap url in wasm file, default is true. This adds a sourceMappingURL custom section in the wasm file with a reference to the sourcemap file. This allows browsers to automatically load the sourcemap file.")
+  @Help("embeds the sourcemap url in wasm file. Default is true. This adds a sourceMappingURL custom section in the wasm file with a reference to the sourcemap file. This allows browsers to automatically load the sourcemap file.")
   bool embed = true;
 
   @Option("embed-base-url")
@@ -38,12 +39,8 @@ struct Options
   string embedBaseUrl;
 
   @Option("include-sources")
-  @Help("includes the source files into the sourcemap. Default is 'false'. It is assumed the sources are served from the current working directory.")
+  @Help("includes the source files in the sourcemap. Default is 'false'.")
   bool includeSources;
-
-  @Option("include-sources-path")
-  @Help("locations to search for files. Default is the current working directory. Example: --include-sources-path='[\"source\"]'")
-  string[] includeSourcesPath;
 }
 
 auto getOutputFile(ref Options options) {
@@ -93,16 +90,17 @@ int main(string[] args)
   DebugAbbrev abbrev;
   ubyte[] infoPayload;
   ubyte[] strs;
-  uint codeOffset = 0;
+  uint codeOffset = 8;
   bool foundCodeOffset = false;
   bool hasSourceMappingSection = false;
 
   {
     auto input = File(options.input).byChunk(4096).joiner().drop(8);
     foreach(section; input.readSections) {
-      if (section.id == 10)
+      if (section.id == 10) {
         foundCodeOffset = true;
-      else if (!foundCodeOffset)
+        codeOffset += 1 + sizeOf!(varuint32)(section.payload_len);
+      } else if (!foundCodeOffset)
         codeOffset += section.size();
       if (section.name == ".debug_line")
         line = DebugLine(section.payload);
@@ -118,7 +116,7 @@ int main(string[] args)
   }
 
   DebugInfo info = DebugInfo(infoPayload, abbrev.tags, strs);
-  auto output = line.toSourceMap(info, codeOffset, options.embed, options.embedBaseUrl, options.includeSources, options.includeSourcesPath);
+  auto output = line.toSourceMap(info, codeOffset, options.embed, options.embedBaseUrl, options.includeSources);
   options.getOutputFile().write(output);
   if (options.embed) {
     if (hasSourceMappingSection) {

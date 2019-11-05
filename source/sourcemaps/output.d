@@ -18,7 +18,7 @@ auto getPath(string compDir, const ref LineProgram program, uint fileIndex) {
   return filepath;
 }
 
-auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool embed, string embedBaseUrl, bool includeSources, string[] includeSourcesPaths) {
+auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool embed, string embedBaseUrl, bool includeSources) {
   uint[string] sourceMap;
   Appender!(string[]) sources;
   Appender!(string[]) contents;
@@ -29,7 +29,7 @@ auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool em
     int sourceId;
     int line;
     int column;
-    State opBinaryRight(string op : "-")(ref State rhs) {
+    State opBinary(string op : "-")(ref State rhs) {
       return State(address-rhs.address,
                    sourceId-rhs.sourceId,
                    line-rhs.line,
@@ -46,16 +46,7 @@ auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool em
     }
   }
 
-  auto correctPath(string filename) {
-    if (includeSourcesPaths.length == 0)
-      return filename;
-    auto search = includeSourcesPaths.find!(path => exists(path~"/"~filename));
-    if (search.empty)
-      return filename;
-    return search.front() ~ "/" ~ filename;
-  }
-
-  State prevState, state;
+  State prevState = State(0,0,1,1), state;
   foreach (idx, program; line.programs) {
     string compDir = info.units[idx].getCompDir();
     foreach (address; program.addressInfo) {
@@ -73,7 +64,13 @@ auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool em
         sources.put(filepath);
         if (includeSources) {
           if (!exists(filepath)) {
-            stderr.writeln(format("Error: Cannot find %s", filepath));
+            if (canFind(filepath, ".d-mixin-")) {
+              stderr.writeln(format("Warning: ignoring file %s. Mixins aren't supported.", filepath));
+              contents.put(format("Warning: ignoring file %s. Mixins aren't supported.", filepath));
+            } else {
+              stderr.writeln(format("Error: Cannot find %s", filepath));
+              contents.put(format("Error: Cannot find %s", filepath));
+            }
           } else
             contents.put(readText(filepath));
         }
@@ -87,8 +84,8 @@ auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool em
   JSONValue[] names;
   return JSONValue(["version": JSONValue(3),
                     "names": JSONValue(names),
-                    "sourcesContents": JSONValue(contents.data),
-                    "souces": JSONValue(sources.data),
+                    "sourcesContent": JSONValue(contents.data),
+                    "sources": JSONValue(sources.data),
                     "mappings": JSONValue(mappings.data.join(","))
                     ]);
 }

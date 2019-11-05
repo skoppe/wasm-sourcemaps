@@ -19,4 +19,9 @@ unittest {
   import std.stdio;
   assert(5.encodeVlq == "K");
   assert(125.encodeVlq == "6H");
+  assert(0.encodeVlq ==	"A");
+  assert(1.encodeVlq == "C");
+  assert(encodeVlq(-1) == "D");
+  assert(123.encodeVlq == "2H");
+  assert(123456789.encodeVlq == "qxmvrH");
 }
