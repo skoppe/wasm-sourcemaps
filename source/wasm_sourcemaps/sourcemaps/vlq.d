@@ -1,4 +1,4 @@
-module sourcemaps.vlq;
+module wasm_sourcemaps.sourcemaps.vlq;
 
 auto encodeVlq(long n) {
   enum chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

@@ -3,15 +3,15 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-module dwarf.debugline;
+module wasm_sourcemaps.dwarf.debugline;
 
 // this implementation follows the DWARF v3 documentation
 
 import std.exception;
 import std.range;
 import std.conv : to;
-import dwarf.meta;
-import dwarf.elf;
+import wasm_sourcemaps.dwarf.meta;
+import wasm_sourcemaps.dwarf.elf;
 import std.stdio;
 import std.format;
 

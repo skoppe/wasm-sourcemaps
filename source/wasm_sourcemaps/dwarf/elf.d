@@ -3,7 +3,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-module dwarf.elf;
+module wasm_sourcemaps.dwarf.elf;
 
 class ELFException : Exception {
 	this(string msg, string file = __FILE__, size_t line = __LINE__) {

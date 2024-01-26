@@ -1,0 +1,26 @@
+{
+	"authors": [
+		"Sebastiaan Koppe", "Hipreme"
+	],
+	"copyright": "Copyright © 2019, Sebastiaan Koppe",
+	"dependencies": {
+		"wasm-reader": "~>0.0.6"
+	},
+	"configurations": [
+		{
+			"dependencies": {
+				"darg": "~>0.1.0"
+			},
+			"name": "cli",
+			"targetType": "executable"
+		},
+		{
+			"name": "library",
+			"targetType": "staticLibrary",
+			"excludedSourceFiles": ["source/app.d"]
+		}
+	],
+	"description": "Converts DWARF debug info to sourcemaps for browser debug tools",
+	"license": "BSL-1.0",
+	"name": "wasm-sourcemaps"
+}

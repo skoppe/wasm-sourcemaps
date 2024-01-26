@@ -1,5 +1,5 @@
-module sourcemaps.output;
-import sourcemaps.vlq;
+module wasm_sourcemaps.sourcemaps.output;
+import wasm_sourcemaps.sourcemaps.vlq;
 
 import std.array;
 import std.json;
@@ -8,8 +8,8 @@ import std.algorithm : find, canFind;
 import std.file : exists, readText;
 import std.stdio : writeln, stderr;
 import std.format;
-import dwarf.debugline;
-import dwarf.debuginfo;
+import wasm_sourcemaps.dwarf.debugline;
+import wasm_sourcemaps.dwarf.debuginfo;
 
 auto getPath(string compDir, const ref LineProgram program, uint fileIndex) {
   auto filepath = program.fileFromIndex(fileIndex);

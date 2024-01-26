@@ -1,12 +1,12 @@
-module dwarf.debuginfo;
+module wasm_sourcemaps.dwarf.debuginfo;
 // this implementation follows the DWARF v4 documentation
 
 import std.exception;
 import std.range;
 import std.conv : to;
-import dwarf.meta;
-import dwarf.elf;
-import dwarf.debugabbrev;
+import wasm_sourcemaps.dwarf.meta;
+import wasm_sourcemaps.dwarf.elf;
+import wasm_sourcemaps.dwarf.debugabbrev;
 
 import std.stdio;
 import std.format;
