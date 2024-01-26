@@ -74,7 +74,7 @@ bool generateSourceMaps(string outputPath, string inputPath, string embedBaseUrl
     }
 
     DebugInfo info = DebugInfo(infoPayload, abbrev.tags, strs);
-    auto output = line.toSourceMap(info, codeOffset, shouldEmbed, embedBaseUrl, includeSources);
+    auto output = line.toSourceMap(info, codeOffset, shouldEmbed, embedBaseUrl, includeSources, errors);
     getOutputFile(outputPath, inputPath).write(output);
     if (shouldEmbed) {
         if (hasSourceMappingSection) {

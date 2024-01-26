@@ -18,7 +18,7 @@ auto getPath(string compDir, const ref LineProgram program, uint fileIndex) {
   return filepath;
 }
 
-auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool embed, string embedBaseUrl, bool includeSources) {
+auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool embed, string embedBaseUrl, bool includeSources, ref string[] errors) {
   uint[string] sourceMap;
   Appender!(string[]) sources;
   Appender!(string[]) contents;
@@ -65,10 +65,10 @@ auto toSourceMap(DebugLine line, DebugInfo info, uint codeSectionOffset, bool em
         if (includeSources) {
           if (!exists(filepath)) {
             if (canFind(filepath, ".d-mixin-")) {
-              stderr.writeln(format("Warning: ignoring file %s. Mixins aren't supported.", filepath));
+              errors~= "Warning: ignoring file " ~ filepath~ " Mixins aren't supported.";
               contents.put(format("Warning: ignoring file %s. Mixins aren't supported.", filepath));
             } else {
-              stderr.writeln(format("Error: Cannot find %s", filepath));
+              errors~= "Error: Cannot find "~filepath;
               contents.put(format("Error: Cannot find %s", filepath));
             }
           } else
