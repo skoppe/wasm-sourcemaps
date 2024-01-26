@@ -3,15 +3,15 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-module dwarf.debugabbrev;
+module wasm_sourcemaps.dwarf.debugabbrev;
 
 // this implementation follows the DWARF v4 documentation
 
 import std.exception;
 import std.range;
 import std.conv : to;
-import dwarf.meta;
-import dwarf.elf;
+import wasm_sourcemaps.dwarf.meta;
+import wasm_sourcemaps.dwarf.elf;
 
 alias ULEB128 = ulong;
 alias LEB128 = long;

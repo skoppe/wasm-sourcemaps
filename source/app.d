@@ -1,15 +1,16 @@
 import std.stdio;
 import wasm_reader.reader;
 import wasm_reader.leb;
-import dwarf.debugline;
-import dwarf.debugabbrev;
-import dwarf.debuginfo;
+import wasm_sourcemaps.dwarf.debugline;
+import wasm_sourcemaps.dwarf.debugabbrev;
+import wasm_sourcemaps.dwarf.debuginfo;
+import wasm_sourcemaps.generate;
 import std.conv;
 
 import std.algorithm : map, filter, joiner, each;
 import std.range : drop, take;
 import std.format;
-import sourcemaps.output;
+import wasm_sourcemaps.sourcemaps.output;
 import std.array;
 import std.file;
 import std.path;
@@ -43,19 +44,13 @@ struct Options
   bool includeSources;
 }
 
-auto getOutputFile(ref Options options) {
-  if (options.output == "-")
-    return stdout;
-  if (options.output == "")
-    options.output = options.input~".map";
-  return File(options.output,"w");
+auto getOutputFile(ref Options options) 
+{
+  return wasm_sourcemaps.generate.getOutputFile(options.output, options.input);
 }
 
 auto getSourceMappingUrl(ref Options options) {
-  auto output = options.output;
-  if (options.embedBaseUrl.length > 0)
-    return options.embedBaseUrl ~ "/" ~ output;
-  return "./"~output;
+  return wasm_sourcemaps.generate.getSourceMappingUrl(options.output, options.embedBaseUrl);
 }
 
 immutable usage = usageString!Options("wasm-sourcemaps");
@@ -80,57 +75,12 @@ int main(string[] args)
     write(help);
     return 0;
   }
+  string[] errors;
 
-  if (!exists(options.input)) {
-    writefln("Error: File %s doesn't exist", options.input);
-    return 1;
-  }
+  bool ret = generateSourceMaps(options.output, options.input, options.embedBaseUrl, options.embed, options.includeSources, errors);
 
-  DebugLine line;
-  DebugAbbrev abbrev;
-  ubyte[] infoPayload;
-  ubyte[] strs;
-  uint codeOffset = 8;
-  bool foundCodeOffset = false;
-  bool hasSourceMappingSection = false;
+  foreach(err; errors)
+    stderr.writeln(err);
+  return ret ? 0 : 1;
 
-  {
-    auto input = File(options.input).byChunk(4096).joiner().drop(8);
-    foreach(section; input.readSections) {
-      if (section.id == 10) {
-        foundCodeOffset = true;
-        codeOffset += 1 + sizeOf!(varuint32)(section.payload_len);
-      } else if (!foundCodeOffset)
-        codeOffset += section.size();
-      if (section.name == ".debug_line")
-        line = DebugLine(section.payload);
-      else if (section.name == ".debug_abbrev")
-        abbrev = DebugAbbrev(section.payload);
-      else if (section.name == ".debug_info")
-        infoPayload = section.payload;
-      else if (section.name == ".debug_str")
-        strs = section.payload;
-      else if (section.name == sourceMappingUrlName)
-        hasSourceMappingSection = true;
-    }
-  }
-
-  DebugInfo info = DebugInfo(infoPayload, abbrev.tags, strs);
-  auto output = line.toSourceMap(info, codeOffset, options.embed, options.embedBaseUrl, options.includeSources);
-  options.getOutputFile().write(output);
-  if (options.embed) {
-    if (hasSourceMappingSection) {
-      stderr.writefln("Error: cannot embed. File %s already has an sourceMappingURL section", options.input);
-      return 1;
-    }
-    string sourceMappingUrl = options.getSourceMappingUrl();
-    auto appendFile = File(options.input, "ab");
-    appendFile.rawWrite([cast(ubyte)0]);
-    appendFile.rawWrite([cast(ubyte)(sourceMappingUrl.length + 2 + sourceMappingUrlName.length)]);
-    appendFile.rawWrite([cast(ubyte)sourceMappingUrlName.length]);
-    appendFile.write(sourceMappingUrlName);
-    appendFile.rawWrite([cast(ubyte)(sourceMappingUrl.length)]);
-    appendFile.write(sourceMappingUrl);
-  }
-  return 0;
 }
