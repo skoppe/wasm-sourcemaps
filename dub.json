@@ -18,6 +18,12 @@
 			"name": "library",
 			"targetType": "staticLibrary",
 			"excludedSourceFiles": ["source/app.d"]
+		},
+		{
+			"name": "optlibrary",
+			"targetType": "staticLibrary",
+			"dflags-ldc": ["-O3"],
+			"excludedSourceFiles": ["source/app.d"]
 		}
 	],
 	"description": "Converts DWARF debug info to sourcemaps for browser debug tools",

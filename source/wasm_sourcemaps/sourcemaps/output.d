@@ -6,7 +6,6 @@ import std.json;
 import std.path : buildNormalizedPath;
 import std.algorithm : find, canFind;
 import std.file : exists, readText;
-import std.stdio : writeln, stderr;
 import std.format;
 import wasm_sourcemaps.dwarf.debugline;
 import wasm_sourcemaps.dwarf.debuginfo;
